@@ -2,12 +2,14 @@ import logging
 import socket
 import threading
 import time
+from const import TOPIC_SUBSCRIPTION
 from focket import send, recv
 from fserver import subscribe, unsubscribe, publish
 
 
 def listener(conn: socket.socket, addr, close, ping):
     while True:
+        print(TOPIC_SUBSCRIPTION.keys())
         try:
             message = recv(conn)
         except Exception as e:
@@ -24,7 +26,7 @@ def listener(conn: socket.socket, addr, close, ping):
         message = message.split()
         if message[0] == "Subscribe":
             try:
-                subscribe(conn, str(message[1:]))
+                subscribe(conn, message[1:])
 
                 succ = '$ SUB SUCC\n'
                 send(conn, succ)

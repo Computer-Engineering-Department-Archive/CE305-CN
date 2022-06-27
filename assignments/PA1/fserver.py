@@ -20,8 +20,7 @@ def register(conn, topics):
             if conn not in TOPIC_SUBSCRIPTION[topic]:
                 TOPIC_SUBSCRIPTION[topic].append(conn)
         else:
-            TOPIC_SUBSCRIPTION[topic] = []
-            TOPIC_SUBSCRIPTION[topic].append(conn)
+            TOPIC_SUBSCRIPTION[topic] = [conn]
 
 
 def unsubscribe(conn):
@@ -31,7 +30,7 @@ def unsubscribe(conn):
 
 
 def publish(topic, message):
-    publication = "$ MESSAGE \"{}\"".format(topic)
+    publication = "$ MESSAGE \"" + topic + '\"'
     for c in message:
         publication += " " + c
 
