@@ -2,7 +2,7 @@ import socket
 import sys
 import threading
 from const import HOST, PORT
-from server_hadler import handler, listener, connect
+from server_hadler import cmd, listener, connect
 
 
 if __name__ == '__main__':
@@ -18,7 +18,7 @@ if __name__ == '__main__':
             client.connect(info)
             # THREAD FOR SERVER LISTENER
             threading.Thread(target=listener, args=(client,)).start()
-            handler(client)
+            cmd(client)
 
     except Exception as e:
         text = 'ERROR?'

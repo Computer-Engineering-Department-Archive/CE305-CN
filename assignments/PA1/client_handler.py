@@ -8,8 +8,12 @@ from fserver import subscribe, unsubscribe, publish
 
 
 def listener(conn: socket.socket, addr, close, ping):
+    ack = 0
+    recent_ack = 0
+    recent = None
+    buff = []
+
     while True:
-        print(TOPIC_SUBSCRIPTION.keys())
         try:
             message = recv(conn)
         except Exception as e:
@@ -28,8 +32,8 @@ def listener(conn: socket.socket, addr, close, ping):
             try:
                 subscribe(conn, message[1:])
 
-                succ = '$ SUB SUCC\n'
-                send(conn, succ)
+                suback = 'SubAck\n'
+                send(conn, suback)
             except Exception as e:
                 failed = '$ SUB FAILED'
 
@@ -39,18 +43,43 @@ def listener(conn: socket.socket, addr, close, ping):
             try:
                 publish(message[1], message[2:])
 
-                pub = '$ PUB SUCC'
-                send(conn, pub)
+                puback = 'PubAck'
+                send(conn, puback)
+
+                ack = len(TOPIC_SUBSCRIPTION[message[1]])
+                recent_ack = 0
+                buff = message
+                recent = time.time()
             except Exception as e:
                 failed = '$ PUB FAILED'
 
                 logging.error(failed, e)
                 send(conn, failed)
+        elif message[0] == 'Ping':
+            try:
+                send(conn, 'Pong')
+            except Exception as e:
+                failed = '$ PONG FAILED'
+
+                logging.error(failed, e)
+                send(conn, failed)
         elif message[0] == "Pong":
             del ping[:]
+        elif message[0] == 'AckQ':
+            recent_ack = recent_ack + 1
+            print('$ ACK {} RCV FROM {}'.format(recent_ack, addr))
         elif message[0] == "Quit":
             close.append(1)
             break
+
+        if recent is not None:
+            if recent_ack == ack:
+                recent = None
+                recent_ack = 0
+                ack = 0
+            elif (time.time() - recent) >= 5.0:
+                publish(buff[1], buff[2:])
+                recent_ack = 0
 
 
 def handler(conn: socket.socket, addr):
